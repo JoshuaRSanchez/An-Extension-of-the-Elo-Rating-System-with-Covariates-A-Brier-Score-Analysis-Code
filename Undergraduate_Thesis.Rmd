@@ -1,0 +1,1825 @@
+---
+title: "Departmental Honors Thesis"
+output: html_document
+date: "2026-02-22"
+---
+#Reading in Packages
+```{r}
+library(RSQLite)
+library(data.table)
+library(dplyr)
+library(bigchess)
+library(igraph)
+library(BradleyTerry2)
+library(ggplot2)
+library(countrycode)
+```
+##Functions
+#Brier Score
+```{r}
+brier_score <- function(p, q) {
+  mean((p - q)^2)
+}
+```
+#Score the result of each game, should make the result of each game numeric.
+```{r}
+get_score <- function(result) {
+  if (result == "1-0") return(c(1, 0))
+  if (result == "0-1") return(c(0, 1))
+  return(c(0.5, 0.5))
+}
+```
+
+
+###January 2026
+```{r}
+jan26path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_jan26frl.txt"
+lines <- readLines(jan26path, encoding = "UTF-8")
+```
+```{r}
+max_len_jan26 <- max(nchar(lines[-1]))  # find the longest row
+data_jan26 <- data.frame(
+  ID          = trimws(substr(lines[-1], 1, 14)),
+  Name        = trimws(substr(lines[-1], 15, 74)),
+  Fed         = trimws(substr(lines[-1], 75, 79)),
+  Sex         = trimws(substr(lines[-1], 80, 81)),
+  Tit         = trimws(substr(lines[-1], 82, 85)),
+  WTit        = trimws(substr(lines[-1], 86, 90)),
+  OTit        = trimws(substr(lines[-1], 91, 96)),
+  FOA         = trimws(substr(lines[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines[-1], 114, 119))),
+  Gms         = trimws(substr(lines[-1], 120, 122)),
+  K           = trimws(substr(lines[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines[-1], 126, 130))),
+  Flag        = trimws(substr(lines[-1], 131, max_len_jan26)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###December 2025
+```{r}
+dec25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_dec25frl.txt"
+lines_dec25 <- readLines(dec25path, encoding = "UTF-8")
+```
+```{r}
+max_len_dec25 <- max(nchar(lines_dec25[-1]))  # find the longest row
+data_dec25 <- data.frame(
+  ID          = trimws(substr(lines_dec25[-1], 1, 14)),
+  Name        = trimws(substr(lines_dec25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_dec25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_dec25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_dec25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_dec25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_dec25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_dec25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_dec25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_dec25[-1], 120, 122)),
+  K           = trimws(substr(lines_dec25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_dec25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_dec25[-1], 131, max_len_dec25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###November 2025
+```{r}
+nov25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_nov25frl.txt"
+lines_nov25 <- readLines(nov25path, encoding = "UTF-8")
+```
+```{r}
+max_len_nov25 <- max(nchar(lines_nov25[-1]))  # find the longest row
+data_nov25 <- data.frame(
+  ID          = trimws(substr(lines_nov25[-1], 1, 14)),
+  Name        = trimws(substr(lines_nov25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_nov25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_nov25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_nov25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_nov25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_nov25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_nov25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_nov25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_nov25[-1], 120, 122)),
+  K           = trimws(substr(lines_nov25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_nov25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_nov25[-1], 131, max_len_nov25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###October 2025
+```{r}
+oct25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_oct25frl.txt"
+lines_oct25 <- readLines(oct25path, encoding = "UTF-8")
+```
+```{r}
+max_len_oct25 <- max(nchar(lines_oct25[-1]))  # find the longest row
+data_oct25 <- data.frame(
+  ID          = trimws(substr(lines_oct25[-1], 1, 14)),
+  Name        = trimws(substr(lines_oct25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_oct25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_oct25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_oct25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_oct25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_oct25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_oct25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_oct25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_oct25[-1], 120, 122)),
+  K           = trimws(substr(lines_oct25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_oct25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_oct25[-1], 131, max_len_oct25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###September 2025
+```{r}
+sep25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_sep25frl.txt"
+lines_sep25 <- readLines(sep25path, encoding = "UTF-8")
+```
+```{r}
+max_len_sep25 <- max(nchar(lines_sep25[-1]))  # find the longest row
+data_sep25 <- data.frame(
+  ID          = trimws(substr(lines_sep25[-1], 1, 14)),
+  Name        = trimws(substr(lines_sep25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_sep25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_sep25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_sep25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_sep25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_sep25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_sep25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_sep25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_sep25[-1], 120, 122)),
+  K           = trimws(substr(lines_sep25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_sep25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_sep25[-1], 131, max_len_sep25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###August 2025
+```{r}
+aug25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_aug25frl.txt"
+lines_aug25 <- readLines(aug25path, encoding = "UTF-8")
+```
+```{r}
+max_len_aug25 <- max(nchar(lines_aug25[-1]))  # find the longest row
+data_aug25 <- data.frame(
+  ID          = trimws(substr(lines_aug25[-1], 1, 14)),
+  Name        = trimws(substr(lines_aug25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_aug25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_aug25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_aug25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_aug25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_aug25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_aug25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_aug25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_aug25[-1], 120, 122)),
+  K           = trimws(substr(lines_aug25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_aug25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_aug25[-1], 131, max_len_aug25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###July 2025
+```{r}
+jul25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_jul25frl.txt"
+lines_jul25 <- readLines(jul25path, encoding = "UTF-8")
+```
+```{r}
+max_len_jul25 <- max(nchar(lines_jul25[-1]))  # find the longest row
+data_jul25 <- data.frame(
+  ID          = trimws(substr(lines_jul25[-1], 1, 14)),
+  Name        = trimws(substr(lines_jul25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_jul25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_jul25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_jul25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_jul25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_jul25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_jul25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_jul25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_jul25[-1], 120, 122)),
+  K           = trimws(substr(lines_jul25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_jul25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_jul25[-1], 131, max_len_jul25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###June 2025
+```{r}
+jun25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_jun25frl.txt"
+lines_jun25 <- readLines(jun25path, encoding = "UTF-8")
+```
+```{r}
+max_len_jun25 <- max(nchar(lines_jun25[-1]))  # find the longest row
+data_jun25 <- data.frame(
+  ID          = trimws(substr(lines_jun25[-1], 1, 14)),
+  Name        = trimws(substr(lines_jun25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_jun25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_jun25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_jun25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_jun25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_jun25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_jun25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_jun25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_jun25[-1], 120, 122)),
+  K           = trimws(substr(lines_jun25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_jun25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_jun25[-1], 131, max_len_jun25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###May 2025
+```{r}
+may25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_may25frl.txt"
+lines_may25 <- readLines(may25path, encoding = "UTF-8")
+```
+```{r}
+max_len_may25 <- max(nchar(lines_may25[-1]))  # find the longest row
+data_may25 <- data.frame(
+  ID          = trimws(substr(lines_may25[-1], 1, 14)),
+  Name        = trimws(substr(lines_may25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_may25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_may25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_may25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_may25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_may25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_may25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_may25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_may25[-1], 120, 122)),
+  K           = trimws(substr(lines_may25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_may25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_may25[-1], 131, max_len_may25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###April 2025
+```{r}
+apr25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_apr25frl.txt"
+lines_apr25 <- readLines(apr25path, encoding = "UTF-8")
+```
+```{r}
+max_len_apr25 <- max(nchar(lines_apr25[-1]))  # find the longest row
+data_apr25 <- data.frame(
+  ID          = trimws(substr(lines_apr25[-1], 1, 14)),
+  Name        = trimws(substr(lines_apr25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_apr25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_apr25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_apr25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_apr25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_apr25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_apr25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_apr25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_apr25[-1], 120, 122)),
+  K           = trimws(substr(lines_apr25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_apr25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_apr25[-1], 131, max_len_apr25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###March 2025
+```{r}
+mar25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_mar25frl.txt"
+lines_mar25 <- readLines(mar25path, encoding = "UTF-8")
+```
+```{r}
+max_len_mar25 <- max(nchar(lines_mar25[-1]))  # find the longest row
+data_mar25 <- data.frame(
+  ID          = trimws(substr(lines_mar25[-1], 1, 14)),
+  Name        = trimws(substr(lines_mar25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_mar25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_mar25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_mar25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_mar25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_mar25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_mar25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_mar25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_mar25[-1], 120, 122)),
+  K           = trimws(substr(lines_mar25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_mar25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_mar25[-1], 131, max_len_mar25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+###February 2025
+```{r}
+feb25path <- "C:/Users/Jrs81/Downloads/FIDE_Snapshots/standard_feb25frl.txt"
+lines_feb25 <- readLines(feb25path, encoding = "UTF-8")
+```
+```{r}
+max_len_feb25 <- max(nchar(lines_feb25[-1]))  # find the longest row
+data_feb25 <- data.frame(
+  ID          = trimws(substr(lines_feb25[-1], 1, 14)),
+  Name        = trimws(substr(lines_feb25[-1], 15, 74)),
+  Fed         = trimws(substr(lines_feb25[-1], 75, 79)),
+  Sex         = trimws(substr(lines_feb25[-1], 80, 81)),
+  Tit         = trimws(substr(lines_feb25[-1], 82, 85)),
+  WTit        = trimws(substr(lines_feb25[-1], 86, 90)),
+  OTit        = trimws(substr(lines_feb25[-1], 91, 96)),
+  FOA         = trimws(substr(lines_feb25[-1], 97, 113)),
+  Rating = as.numeric(trimws(substr(lines_feb25[-1], 114, 119))),
+  Gms         = trimws(substr(lines_feb25[-1], 120, 122)),
+  K           = trimws(substr(lines_feb25[-1], 123, 125)),
+  BirthYear   = as.integer(trimws(substr(lines_feb25[-1], 126, 130))),
+  Flag        = trimws(substr(lines_feb25[-1], 131, max_len_feb25)),  # use max row length
+  stringsAsFactors = FALSE
+)
+```
+
+#Created Month Column
+```{r}
+data_jan26$Month <- "JAN26"
+data_dec25$Month <- "DEC25"
+data_nov25$Month <- "NOV25"
+data_oct25$Month <- "OCT25"
+data_sep25$Month <- "SEP25"
+data_aug25$Month <- "AUG25"
+data_jul25$Month <- "JUL25"
+data_jun25$Month <- "JUN25"
+data_may25$Month <- "MAY25"
+data_apr25$Month <- "APR25"
+data_mar25$Month <- "MAR25"
+data_feb25$Month <- "FEB25"
+```
+
+#Find top 20 players (With filter for inactivity, so we don't get retired players w/ high ratings)
+```{r}
+reference_top20 <- data_jan26 %>%
+  filter(Flag != "i") %>%
+  arrange(desc(Rating)) %>%
+  slice(1:20)
+
+top20_IDs <- reference_top20$ID
+```
+#Filter for top 20 players
+```{r}
+data_jan26_top20 <- data_jan26 %>% filter(ID %in% top20_IDs)
+data_dec25_top20 <- data_dec25 %>% filter(ID %in% top20_IDs)
+data_nov25_top20 <- data_nov25 %>% filter(ID %in% top20_IDs)
+data_oct25_top20 <- data_oct25 %>% filter(ID %in% top20_IDs)
+data_sep25_top20 <- data_sep25 %>% filter(ID %in% top20_IDs)
+data_aug25_top20 <- data_aug25 %>% filter(ID %in% top20_IDs)
+data_jul25_top20 <- data_jul25 %>% filter(ID %in% top20_IDs)
+data_jun25_top20 <- data_jun25 %>% filter(ID %in% top20_IDs)
+data_may25_top20 <- data_may25 %>% filter(ID %in% top20_IDs)
+data_apr25_top20 <- data_apr25 %>% filter(ID %in% top20_IDs)
+data_mar25_top20 <- data_mar25 %>% filter(ID %in% top20_IDs)
+data_feb25_top20 <- data_feb25 %>% filter(ID %in% top20_IDs)
+```
+#Combine the data for top 20 players
+```{r}
+combined_top20 <- rbind(data_jan26_top20, 
+                        data_dec25_top20, 
+                        data_nov25_top20, 
+                        data_oct25_top20, 
+                        data_sep25_top20, 
+                        data_aug25_top20, 
+                        data_jul25_top20, 
+                        data_jun25_top20, 
+                        data_may25_top20, 
+                        data_apr25_top20, 
+                        data_mar25_top20, 
+                        data_feb25_top20)
+```
+#Set Month order
+```{r}
+month_order <- c("FEB25","MAR25","APR25","MAY25","JUN25",
+                 "JUL25","AUG25","SEP25","OCT25",
+                 "NOV25","DEC25","JAN26")
+
+combined_top20$Month <- factor(combined_top20$Month,
+                                levels = month_order,
+                                ordered = TRUE)
+# Necessary to create FIDE system, turn month snapshot into a date.
+month_to_date <- as.Date(c("2025-02-01","2025-03-01","2025-04-01",
+                           "2025-05-01","2025-06-01","2025-07-01",
+                           "2025-08-01","2025-09-01","2025-10-01",
+                           "2025-11-01","2025-12-01","2026-01-01"))
+
+names(month_to_date) <- month_order
+
+# Create a proper Date column in combined_top20
+combined_top20$Date <- month_to_date[as.character(combined_top20$Month)]
+```
+
+#Graph of top 20 player's elo over 12 months
+```{r}
+ggplot(combined_top20, 
+       aes(x = Month, y = Rating, group = Name, color = Name)) +
+  geom_line() +
+  theme_minimal() +
+   theme(axis.text.x = element_blank())
+```
+```{r}
+unique(combined_top20$Name)
+```
+
+
+#Player rating over the 12 months 
+```{r}
+player_history <- combined_top20 %>%
+  filter(Name == "Abdusattorov, Nodirbek") %>%
+  arrange(Month) %>%
+  select(Month, Rating)
+
+player_history
+```
+
+
+### Reading in Games!!! YAY!!!
+
+
+#Create a function to parse the pgn so it can be turned into a data frame; parse_pgn(file_path)
+#UPDATE: Changed parse_pgn() so it can handle multiple files; parse_pgn(c(file_path,file_path,...))
+
+Prompt that could be used to build this: Write an R function called parse_pgn that takes a vector of file paths to PGN (Portable Game Notation) chess files and returns a single combined dataframe. The function should define a set of expected PGN tag names (such as Event, Site, Date, Round, White, Black, Result, WhiteElo, BlackElo, ECO, Opening, Variation, and related fields) and only retain those tags when parsing. For each file, read the contents using readLines() with UTF-8 encoding, split the file into individual games based on blank lines, and keep only valid games that contain PGN tag pairs. Within the function, use an inner helper function to process each file: extract tag names and values using regular expressions, filter to the expected tags, and construct a one-row dataframe for each game, filling missing fields with NA. After processing all games in a file, combine them into a dataframe and include a SourceFile column using the file’s basename. Finally, combine the results from all input files into a single dataframe using dplyr::bind_rows, and return the final dataset.
+```{r}
+parse_pgn <- function(file_paths) {
+  
+  tag_names <- c(
+    "Event","Site","Date","Round","White","Black","Result",
+    "WhiteTitle","BlackTitle","WhiteElo","BlackElo",
+    "ECO","Opening","Variation","WhiteFideId","BlackFideId",
+    "EventDate","EventType"
+  )
+  
+  # Inner function to parse a single file
+  parse_single <- function(file_path) {
+    pgn_lines <- readLines(file_path, encoding = "UTF-8")
+    games <- split(pgn_lines, cumsum(pgn_lines == ""))
+    games <- games[sapply(games, function(g) any(grepl("^\\[", g)))]
+    
+    game_data <- lapply(games, function(g) {
+      tags <- g[grepl("^\\[", g)]
+      names <- sub("^\\[(\\w+).*", "\\1", tags)
+      values <- sub('.*"(.*)".*', '\\1', tags)
+      
+      # Keep only expected tags
+      keep <- names %in% tag_names
+      names <- names[keep]
+      values <- values[keep]
+      
+      row <- setNames(rep(NA, length(tag_names)), tag_names)
+      row[names] <- values
+      as.data.frame(t(row), stringsAsFactors = FALSE)
+    })
+    
+    df <- bind_rows(game_data)
+    df$SourceFile <- basename(file_path)
+    return(df)
+  }
+  
+  # Parse all files and combine
+  all_games <- lapply(file_paths, parse_single)
+  final_df <- bind_rows(all_games)
+  return(final_df)
+}
+```
+
+#Create a function to filter for top 20 games; filter_fideids(data, fide_ids)
+```{r}
+filter_fideids <- function(data, fide_ids){
+  top_games <- data %>%
+    filter(WhiteFideId %in% fide_ids,
+           BlackFideId %in% fide_ids)
+  return(top_games)
+}
+```
+
+
+#Reading in more tournaments
+```{r}
+all_games <- parse_pgn(c(
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/bund2425.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchhun2425.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchgbr2425.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/nicowgp25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/reykop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/freeparisko25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/grenkefrop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/freeparisrr25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/grenkeop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/punewgp25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/semanaalic25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/menorcaopa25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chnteamw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chnteamm25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/warsawbli25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/warsawrap25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchrushl25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchrusw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchrusp25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/sardworldopa25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/batchampwblitz25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/batchampmblitz25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/batchampwrap25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/batchampmrap25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/formenteraop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/grosswgp25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/superbetcltb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/superbetcl25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/asianindw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/asianind25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchfrawb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchfrawa25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/capmemel25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chafricaw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chafrica25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chgerwtb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chgercand25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chgerw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chgerm25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/wlcop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/sharjmastb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/sharjmast25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/sige25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/karpovcup5025.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchfrabasse25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchfrahaute25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchfragpb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tchfragpa25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercontbl25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercont25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/matchcap25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/norwayop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/norwayaw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/norwayw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/norwaya25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/norway25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/cambridgeop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/niemanndubm225.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/dubaiopa25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/avagyanmem25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/clashgen25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/ttbl0306l25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/ttbl0306e25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/delhiop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/niemanngirirem25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/uzchesscupmasttb125.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/niemannaronianm25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/ttbl0107e25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chnyanchenrapid25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chusajung25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/engwtb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/engoptb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/engw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/ghenttpm25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/ghentop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/clashgen225.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/esportswcupd25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/esportswcupc25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/esportswcupb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/esportswcupa25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/esportswcupfin25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chgbrtb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/stlbli25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/stlrap25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/rubinsteingm25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/sinqcuptb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/sinqcup25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/ttbl2608l25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/fujglobsuper25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/ttbl2608e25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/bund2526.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/legprod25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/dragomast25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chrus25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chrusw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/checkmusaind25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tcheurw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tcheur25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/clutchlegends25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chusaw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chusa25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/eccw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/ecc25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/clutchchamp25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/lonccop25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/wwteamsb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/szmgiagm25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/freestyleko25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/freestylerr25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/gashmemb25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/gashmemr25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/globalchess3425.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/globalchesslf25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/wbliwfko25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/wbliw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/wblifko25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/wrap25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/wrapw25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/riltcup2526.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/hastm2526.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tataindbliwtb26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tataindbliw26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tataindrapw26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tataindblim26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tataindrap26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tatatien26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tatachall26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/tatamast26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/chesscomspeedf25.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/freewchko5826.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/freewchwe26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/freewchko26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/freewchrr26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/stlmast26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/pragueintop26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/praguechall26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/praguemast26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercupblitz26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercupchampew26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercupchampe26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercupchamp26.pgn",
+  "C:/Users/Jrs81/Downloads/FIDE_Snapshots/fidewrbtf5825.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/fidewrbtf5825.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/fidewrbtf25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/fidewtblpoold25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/fidewtblpoolc25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/fidewtblpoolb25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/fidewtblpoola25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/wcupw25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/fidegrandsww25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/wchw25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/cheurw25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercupchamp25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercupchampe25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercupchampw25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercupchampew25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/amercupblitz25.pgn",
+    "C:/Users/Jrs81/Downloads/FIDE_Snapshots/cheurind25.pgn"
+))
+```
+
+
+
+#Combined Data of FIDE Rankings
+```{r}
+combined_FIDE <- rbind(data_jan26, 
+                        data_dec25, 
+                        data_nov25, 
+                        data_oct25, 
+                        data_sep25, 
+                        data_aug25, 
+                        data_jul25, 
+                        data_jun25, 
+                        data_may25, 
+                        data_apr25, 
+                        data_mar25, 
+                        data_feb25)
+```
+```{r}
+all_games_top20 <- filter_fideids(all_games, top20_IDs)
+```
+# Arrange all games by date, and have cutoff date for data.
+```{r}
+cutoff_date <- as.Date("2026-01-31")
+all_games_top20 <- all_games_top20 %>%
+  mutate(Date_obj = as.Date(Date, format = "%Y.%m.%d")) %>% #Date_obj will keep the date looking the same in the data(YYYY.MM.DD), but in data it is (YYYY-MM-DD)
+  filter(!is.na(Date_obj) & Date_obj <= cutoff_date) %>%
+  arrange(Date_obj)
+```
+#Change WhiteElo and BlackElo to numeric instead of chr
+```{r}
+all_games_top20 <- all_games_top20 %>%
+  mutate(WhiteElo = as.numeric(WhiteElo),
+    BlackElo = as.numeric(BlackElo))
+```
+
+
+####Making the Elo System!!! FINALLY!!!
+
+#Note: Fide uses a variable k-factor for their elo, depending on rating. 
+Rules on FIDE Website (https://ratings.fide.com/calc.phtml?page=change)
+K = 40 for a player new to the rating list until he has completed events with at least 30 games
+K = 20 as long as a player's rating remains under 2400.
+K = 10 once a player's published rating has reached 2400 and remains at that level subsequently, even if the rating drops below 2400.
+K = 40 for all players until their 18th birthday, as long as their rating remains under 2300.
+
+#Note: Fide only updates elo every month, not after every game. How should I use that idea in my elo system?
+1. Maybe Assign initial ratings from FIDE Jan 25, maybe Feb 25, can't remember start date right now
+2. Or, could assign a new "starting elo" every month
+
+#Plan:
+#Note: May want to download updated FIDE Ratings so it is the most recent it could be (FEB 26 & MAR 26)
+
+1. Compute expected win probability using Expected win % of White = 1/(1 + K^((RatingBlack - RatingWhite)/400))
+2. Track rating over time for each player (use visualizations here!)
+3. Make sure game results are numeric (1-0 -> 1, 0.5-0.5 -> 0.5, 0-1 -> 0)
+4.Run the regression & compare to FIDE monthly ratings
+5. Then make the new elo system w/ covariates (Age Country) & do these steps for that & Finally compare to elo system.
+
+
+#Store Ratings in a vector, so it can be updated as we go
+```{r}
+ratings20 <- setNames(rep(NA, length(top20_IDs)), top20_IDs)
+```
+#Assign Initial Ratings to players
+```{r}
+for (i in 1:nrow(all_games_top20)) {
+white_id <- as.character(all_games_top20$WhiteFideId[i])
+black_id <- as.character(all_games_top20$BlackFideId[i])
+
+# Initialize White
+if (is.na(ratings20[white_id])) {
+  ratings20[white_id] <- all_games_top20$WhiteElo[i]}
+
+# Initialize Black
+if (is.na(ratings20[black_id])) {
+  ratings20[black_id] <- all_games_top20$BlackElo[i]}
+}
+```
+# Create storage for predicted probabilities and actual outcomes
+```{r}
+all_games_top20$p_elo <- NA
+all_games_top20$outcome <- NA
+
+K <- 20
+for (i in 1:nrow(all_games_top20)) {
+white_id <- as.character(all_games_top20$WhiteFideId[i])
+black_id <- as.character(all_games_top20$BlackFideId[i])
+RW <- ratings20[white_id]
+RB <- ratings20[black_id]
+
+p_white <- 1 / (1 + 10^((RB - RW)/400))
+all_games_top20$p_elo[i] <- p_white
+
+scores <- get_score(all_games_top20$Result[i])
+SW <- scores[1]
+SB <- scores[2]
+
+all_games_top20$outcome[i] <- SW
+
+ratings20[white_id] <- RW + K * (SW - p_white)
+ratings20[black_id] <- RB + K * (SB - (1-p_white))
+}
+```
+
+#Brier Score for traditional elo system
+```{r}
+brier_trad_elo_top20 <- brier_score(all_games_top20$p_elo, all_games_top20$outcome)
+brier_trad_elo_top20
+```
+#Finding Latest Rating (for FIDE system)
+```{r}
+#combined_top20 #This is the ratings of top 20 players over the 12 months. "Month" column has their rating at that month.
+get_latest_rating <- function(player_id, match_date, fide_data) {
+  player_data <- combined_top20[combined_top20$FideId == player_id & combined_top20$Date <= match_date, ]
+  
+  if (nrow(player_data) == 0) {
+    return(NA)
+  } else {
+    player_data <- player_data[order(player_data$Date), ]
+    return(tail(player_data$Rating, 1))
+  }
+}
+```
+#Fixing combined_top20 and all_games_top20
+```{r}
+combined_top20$FideId <- combined_top20$ID
+all_games_top20$Date_obj <- as.Date(all_games_top20$Date_obj)
+```
+
+#FIDE Probabilities
+```{r}
+all_games_top20$p_fide_snapshot <- NA
+
+for (i in 1:nrow(all_games_top20)) {
+white_id <- all_games_top20$WhiteFideId[i]
+black_id <- all_games_top20$BlackFideId[i]
+match_date <- all_games_top20$Date_obj[i]
+  
+Rw <- get_latest_rating(white_id, match_date, combined_top20)
+Rb <- get_latest_rating(black_id, match_date, combined_top20)
+  
+if (!is.na(Rw) & !is.na(Rb)) {
+all_games_top20$p_fide_snapshot[i] <- 1 / (1 + 10^((Rb - Rw)/400))
+}
+}
+```
+
+#Brier Score for FIDE rating system, checking FIDE Rating System
+```{r}
+brier_score <- function(predicted, actual) {
+  mean((predicted - actual)^2, na.rm = TRUE) #There is NA data for 4 matches, due to unavailable prior ratings, but excluding those 4 out of ~600 isn't bad
+}
+brier_fide_top20 <- brier_score(all_games_top20$p_fide_snapshot, all_games_top20$outcome)
+brier_fide_top20
+```
+#Shows how many matches have NA
+```{r}
+sum(is.na(all_games_top20$p_fide_snapshot))
+```
+#Conclusion: Dynamic updating provides only marginal improvements over official ratings for elite players.The difference is small, and may not be statistically significant.
+```{r}
+brier_fide_top20
+brier_trad_elo_top20
+```
+
+
+#Plan: Build the Elo System model and FIDE Model for all of the people in the tournaments, not only the top 20.
+
+#Filter for people in the FIDE IDs, with filter for inactivity, 248,405 people in total
+```{r}
+reference_fideids <- data_jan26 %>%
+  filter(Flag != "i") %>%
+  slice(1:nrow(data_jan26))
+
+FIDE_IDs <- reference_fideids$ID
+
+#Filter all games for people in FIDE IDs
+all_games_FIDE <- filter_fideids(all_games, FIDE_IDs)
+
+# Arrange all games by date, and have cutoff date for data.
+
+cutoff_date <- as.Date("2026-01-31")
+all_games_FIDE <- all_games_FIDE %>%
+  mutate(Date_obj = as.Date(Date, format = "%Y.%m.%d")) %>% #Date_obj will keep the date looking the same in the data(YYYY.MM.DD), but in data it is (YYYY-MM-DD)
+  filter(!is.na(Date_obj) & Date_obj <= cutoff_date) %>%
+  arrange(Date_obj)
+
+#Change WhiteElo and BlackElo to numeric instead of chr
+
+all_games_FIDE <- all_games_FIDE %>%
+  mutate(WhiteElo = as.numeric(WhiteElo),
+    BlackElo = as.numeric(BlackElo))
+
+all_games_FIDE <- all_games_FIDE %>% 
+  #filter(Result != "1/2-1/2")
+#Store Ratings in a vector, so it can be updated as we go
+
+ratings <- setNames(rep(NA, length(FIDE_IDs)), FIDE_IDs)
+```
+
+#Assign Initial Ratings to players
+```{r}
+for (i in 1:nrow(all_games_FIDE)) {
+white_id <- as.character(all_games_FIDE$WhiteFideId[i])
+black_id <- as.character(all_games_FIDE$BlackFideId[i])
+
+# Initialize White
+if (is.na(ratings[white_id])) {
+  ratings[white_id] <- all_games_FIDE$WhiteElo[i]}
+
+# Initialize Black
+if (is.na(ratings[black_id])) {
+  ratings[black_id] <- all_games_FIDE$BlackElo[i]}
+}
+```
+
+#Loop for probabilities
+```{r}
+K <- 20
+n <- nrow(all_games_FIDE)
+all_games_FIDE$p_elo <- numeric(n)
+all_games_FIDE$outcome <- numeric(n)
+white_ids <- as.character(all_games_FIDE$WhiteFideId)
+black_ids <- as.character(all_games_FIDE$BlackFideId)
+player_index <- setNames(seq_along(ratings), names(ratings))
+
+white_idx <- player_index[white_ids]
+black_idx <- player_index[black_ids]
+
+ratings_current <- ratings
+for (i in 1:n) {
+RW <- ratings_current[white_idx[i]]
+RB <- ratings_current[black_idx[i]]
+
+p_white <- 1 / (1 + 10^((RB - RW)/400))
+all_games_FIDE$p_elo[i] <- p_white
+
+scores <- get_score(all_games_FIDE$Result[i])
+SW <- scores[1]
+SB <- scores[2]
+
+all_games_FIDE$outcome[i] <- SW
+
+ratings_current[white_idx[i]] <- RW + K * (SW - p_white)
+ratings_current[black_idx[i]] <- RB + K * (SB - (1 - p_white))
+}
+```
+#Brier Score for traditional elo system
+```{r}
+brier_trad_elo <- brier_score(all_games_FIDE$p_elo, all_games_FIDE$outcome)
+brier_trad_elo
+```
+
+#Now do the FIDE System
+
+
+#Find Latest rating in FIDE System
+```{r}
+#combined_FIDE #This is the ratings of FIDE players over the 12 months. "Month" column has their rating at that month.
+get_latest_rating <- function(player_id, match_date, fide_data) {
+  # Filter for the player and only dates <= match_date
+  player_data <- fide_data[fide_data$FideId == player_id & fide_data$Date <= match_date, ]
+  
+  # If no data found, return NA
+  if (nrow(player_data) == 0) {
+    return(NA)
+  } else {
+    # Sort by date descending to get the latest rating
+    player_data <- player_data[order(player_data$Date, decreasing = TRUE), ]
+    return(player_data$Rating[1])
+  }
+}
+```
+
+#Fixing combined_FIDE and all_games_FIDE
+```{r}
+combined_FIDE$FideId <- combined_FIDE$ID
+all_games_FIDE$Date_obj <- as.Date(all_games_FIDE$Date_obj)
+```
+#Setting Month Dates correctly so get_latest_rating works right on combined_FIDE
+```{r}
+#Set Month order
+month_order <- c("FEB25","MAR25","APR25","MAY25","JUN25","JUL25","AUG25","SEP25","OCT25","NOV25","DEC25","JAN26")
+
+combined_FIDE$Month <- factor(combined_FIDE$Month,levels = month_order,ordered = TRUE)
+# Necessary to create FIDE system, turn month snapshot into a date.
+month_to_date <- as.Date(c("2025-02-01","2025-03-01","2025-04-01","2025-05-01","2025-06-01","2025-07-01",                   "2025-08-01","2025-09-01","2025-10-01","2025-11-01","2025-12-01","2026-01-01"))
+names(month_to_date) <- month_order
+# Create a proper Date column in combined_FIDE
+combined_FIDE$Month <- as.character(combined_FIDE$Month)
+combined_FIDE$Date <- month_to_date[combined_FIDE$Month]
+```
+
+#FIDE Probabilities, 966 NA entries, system.time() tells me that it takes ~185 minutes to run this code. ~145 minutes the second time ~114 minutes the third time
+```{r}
+all_games_FIDE$p_fide_snapshot <- NA
+
+system.time(for (i in 1:nrow(all_games_FIDE)) {
+white_id <- all_games_FIDE$WhiteFideId[i]
+black_id <- all_games_FIDE$BlackFideId[i]
+match_date <- all_games_FIDE$Date_obj[i]
+  
+Rw <- get_latest_rating(white_id, match_date, combined_FIDE)
+Rb <- get_latest_rating(black_id, match_date, combined_FIDE)
+  
+if (!is.na(Rw) & !is.na(Rb)) {
+all_games_FIDE$p_fide_snapshot[i] <- 1 / (1 + 10^((Rb - Rw)/400))
+}
+})
+```
+
+#Brier Score for FIDE rating system, checking FIDE Rating System
+```{r}
+brier_FIDE <- brier_score(all_games_FIDE$p_fide_snapshot, all_games_FIDE$outcome)
+brier_FIDE
+```
+
+```{r}
+brier_trad_elo
+brier_FIDE
+brier_scores_FIDE_EC
+```
+
+
+###Building an Elo System with covariates
+##Top 20
+#Data Setup
+```{r}
+all_games_top20_EC <- all_games_top20 #So we don't mess with all_games_top20
+#Do not use names, it gets messy
+all_games_top20_EC$player_i <- all_games_top20_EC$WhiteFideId
+all_games_top20_EC$player_j <- all_games_top20_EC$BlackFideId
+all_games_top20_EC$result_num <- all_games_top20_EC$outcome
+all_games_top20_EC$date <- all_games_top20_EC$Date_obj
+
+combined_top20_EC <- combined_top20 
+#Rename some columns
+combined_top20_EC$fide_id <- combined_top20_EC$FideId
+combined_top20_EC$country <- combined_top20_EC$Fed
+combined_top20_EC$birth_year <- combined_top20_EC$BirthYear
+combined_top20_EC$rating <- combined_top20_EC$Rating
+combined_top20_EC$combined_top20_EC_date <- as.Date(combined_top20_EC$Date)
+```
+
+#Match Each game to correct FIDE snapshot so there isn't code that takes 3 hrs like before
+```{r}
+# Convert to data.table
+setDT(all_games_top20_EC)
+setDT(combined_top20_EC)
+# Ensure proper dates
+all_games_top20_EC[, game_date := as.Date(Date, format="%Y.%m.%d")]
+combined_top20_EC[, snap_date := as.Date(combined_top20_EC_date)]
+# Set key for rolling join
+setkey(combined_top20_EC, fide_id, snap_date)
+#Join White player
+white_join <- combined_top20_EC[all_games_top20_EC,on = .(fide_id = WhiteFideId, snap_date <= game_date),mult = "last"]
+# Now rename columns from the left table (snapshot) to _i
+setnames(white_join, c("country", "birth_year", "rating"), c("country_i", "birth_i", "rating_i"))
+setnames(white_join, "date", "game_date")
+#Join Black Player
+full_data <- combined_top20_EC[white_join,on = .(fide_id = BlackFideId, snap_date <= game_date),mult = "last"]
+# Rename the left table columns (snapshot) to _j
+setnames(full_data, c("country", "birth_year", "rating"),c("country_j", "birth_j", "rating_j"))
+# Now all columns exist and game_date is untouched
+all_games_top20_EC <- full_data
+#Get rid of games that have no FIDE snapshot before them
+# Drop rows with missing snapshots (4/583)
+all_games_top20_EC <- all_games_top20_EC[!is.na(rating_i) & !is.na(rating_j)]
+```
+#Calculate rating diff, and results to numeric from White's perspective
+```{r}
+all_games_top20_EC[, rating_diff := rating_i - rating_j]
+all_games_top20_EC[, result_num := fifelse(Result == "1-0", 1,fifelse(Result == "0-1", 0, 0.5))]
+all_games_top20_EC <- all_games_top20_EC %>%  filter(result_num != 0.5) 
+```
+#NOTE: combined_top20_EC is now 240 rows because there is a new row added after every FIDE Snapshot for each player.
+#If this happens for the combined_FIDE, we will have ~6,377,064 rows. NOT GOOD!
+#Solution: Filter combined_top20_EC for players who have games in the dataset
+```{r}
+players_with_games <- unique(c(all_games_top20_EC$player_i,all_games_top20_EC$player_j))
+combined_top20_EC <- combined_top20_EC[fide_id %in% players_with_games]
+```
+#May have to filter for rows that have zero games, but it is built in so that when we look for the most recent rating, we have somewhere to look. 
+
+```{r}
+logistic_model_top20 <- glm(result_num ~ rating_diff, data = all_games_top20_EC, family = binomial)
+summary(logistic_model_top20)
+```
+
+#Calculate Country, start with fixed country effect bias, solved for by regression.
+p <= 0.05, variable probability has an effect. p >=.95, fail to reject the null, variable probability has no effect. .05 < p means that the variable has no statistical significance.
+```{r}
+# Convert country to factor
+all_games_top20_EC[, country_i := factor(country_i)]
+all_games_top20_EC[, country_j := factor(country_j)]
+
+# Fit regression model
+country_model_top20 <- glm(result_num ~ rating_diff + country_i + country_j, data = all_games_top20_EC, family = binomial)
+summary(country_model_top20)
+```
+
+#Calculate Age, could use age difference, or maybe the exact age. start with fixed bias (linear)
+
+```{r}
+#Find the age
+all_games_top20_EC[, age_i := as.numeric(format(Date, "%Y")) - birth_i]
+all_games_top20_EC[, age_j := as.numeric(format(Date, "%Y")) - birth_j]
+
+# Calculate age difference (White - Black)
+all_games_top20_EC[, age_diff := age_i - age_j]
+# Fit regression model
+age_model_top20 <- glm(result_num ~ rating_diff + age_diff, data = all_games_top20_EC, family = binomial)
+summary(age_model_top20)
+```
+
+#Elo Loop & Brier Score for elo system with covariates on top20
+```{r}
+beta_rating_top20 <- 0.01146
+beta_age_top20    <- 0.01335
+alpha_age_top20     <- beta_age_top20 / beta_rating_top20  # ~-5.197789
+alpha_age_top20
+```
+
+PROMPT that could be used to start this loop: Write a complete and well-structured R script that implements an Elo rating system for ATP tennis match data using a sequential loop.
+```{r}
+K <- 20
+scale <- 400
+alpha_age_top20 <- 1.164921   # from regression
+n_runs <- 2
+brier_scores_top20_EC <- numeric(n_runs)
+init_ratings_top20_df <- combined_top20_EC[combined_top20_EC$Month == "FEB25",]
+init_ratings_top20 <- setNames(init_ratings_top20_df$rating,as.character(init_ratings_top20_df$ID))
+
+system.time({
+  all_games_top20_EC$p_elo <- numeric(nrow(all_games_top20_EC))
+  ratings <- init_ratings_top20
+    for (i in 1:nrow(all_games_top20_EC)) {
+      w <- as.character(all_games_top20_EC$player_i[i])
+      b <- as.character(all_games_top20_EC$player_j[i])
+      RW <- ratings[[w]]
+      RB <- ratings[[b]]
+      age_diff <- as.numeric(all_games_top20_EC$age_diff[i])
+      adj_diff <- (RW - RB) + alpha_age_top20 * age_diff
+      p_w <- 1 / (1 + 10^(-adj_diff / scale))
+      all_games_top20_EC$p_elo[i] <- p_w
+      result <- all_games_top20_EC$result_num[i]
+      ratings[[w]] <- RW + K * (result - p_w)
+      ratings[[b]] <- RB + K * ((1 - result) - (1 - p_w))
+    }
+   brier_scores_top20_EC[1] <- brier_score(
+  all_games_top20_EC$p_elo,
+  all_games_top20_EC$result_num
+)
+})
+brier_scores_top20_EC
+```
+```{r}
+brier_trad_elo_top20
+brier_fide_top20
+brier_scores_top20_EC
+```
+
+
+## All Players
+#Data Setup
+```{r}
+all_games_FIDE_EC <- all_games_FIDE #So we don't mess with all_games_FIDE
+#Do not use names, it gets messy
+all_games_FIDE_EC$player_i <- all_games_FIDE_EC$WhiteFideId
+all_games_FIDE_EC$player_j <- all_games_FIDE_EC$BlackFideId
+all_games_FIDE_EC$result_num <- all_games_FIDE_EC$outcome
+all_games_FIDE_EC$date <- all_games_FIDE_EC$Date_obj
+
+combined_FIDE_EC <- combined_FIDE 
+#Rename some columns
+combined_FIDE_EC$fide_id <- combined_FIDE_EC$FideId
+combined_FIDE_EC$country <- combined_FIDE_EC$Fed
+combined_FIDE_EC$birth_year <- combined_FIDE_EC$BirthYear
+combined_FIDE_EC$rating <- combined_FIDE_EC$Rating
+combined_FIDE_EC$combined_FIDE_EC_date <- as.Date(combined_FIDE_EC$Date)
+```
+
+#Match Each game to correct FIDE snapshot so there isn't code that takes 3 hrs like before
+```{r}
+# Convert to data.table
+setDT(all_games_FIDE_EC)
+setDT(combined_FIDE_EC)
+# Ensure proper dates
+all_games_FIDE_EC[, game_date := as.Date(Date, format="%Y.%m.%d")]
+combined_FIDE_EC[, snap_date := as.Date(combined_FIDE_EC_date)]
+# Set key for rolling join
+setkey(combined_FIDE_EC, fide_id, snap_date)
+#Join White player
+white_join <- combined_FIDE_EC[all_games_FIDE_EC,on = .(fide_id = WhiteFideId, snap_date <= game_date),mult = "last"]
+# Now rename columns from the left table (snapshot) to _i
+setnames(white_join, c("country", "birth_year", "rating"), c("country_i", "birth_i", "rating_i"))
+setnames(white_join, "date", "game_date")
+#Join Black Player
+full_data <- combined_FIDE_EC[white_join,on = .(fide_id = BlackFideId, snap_date <= game_date),mult = "last"]
+# Rename the left table columns (snapshot) to _j
+setnames(full_data, c("country", "birth_year", "rating"),c("country_j", "birth_j", "rating_j"))
+# Now all columns exist and game_date is untouched
+all_games_FIDE_EC <- full_data
+#Get rid of games that have no FIDE snapshot before them
+# Drop rows with missing snapshots (4/583)
+all_games_FIDE_EC <- all_games_FIDE_EC[!is.na(rating_i) & !is.na(rating_j)]
+```
+#Calculate rating diff, and results to numeric from White's perspective
+```{r}
+all_games_FIDE_EC[, rating_diff := rating_i - rating_j]
+all_games_FIDE_EC[, result_num := fifelse(Result == "1-0", 1,fifelse(Result == "0-1", 0, 0.5))]
+all_games_FIDE_EC <- all_games_FIDE_EC %>%  filter(result_num != 0.5)
+```
+#NOTE: combined_top20_EC is now 240 rows because there is a new row added after every FIDE Snapshot for each player.
+#If this happens for the combined_FIDE, we will have ~6,377,064 rows. NOT GOOD!
+#Solution: Filter combined_top20_EC for players who have games in the dataset
+```{r}
+players_with_games <- unique(c(all_games_FIDE_EC$player_i,all_games_FIDE_EC$player_j))
+combined_FIDE_EC <- combined_FIDE_EC[fide_id %in% players_with_games]
+```
+#May have to filter for rows that have zero games, but it is built in so that when we look for the most recent rating, we have somewhere to look. 
+
+
+#Calculate Country, start with fixed country effect bias, solved for by regression.
+p <= 0.05, variable probability has an effect. p >=.95, fail to reject the null, variable probability has no effect. .05 < p means that the variable has no statistical significance.
+```{r}
+# Convert country to factor
+all_games_FIDE_EC[, country_i := factor(country_i)]
+all_games_FIDE_EC[, country_j := factor(country_j)]
+
+# Fit regression model
+country_model_FIDE <- glm(result_num ~ rating_diff + country_i + country_j, data = all_games_FIDE_EC, family = binomial)
+summary(country_model_FIDE)
+```
+
+#Calculate Age, then age difference
+```{r}
+all_games_FIDE_EC[, age_i := as.numeric(format(Date, "%Y")) - birth_i]
+all_games_FIDE_EC[, age_j := as.numeric(format(Date, "%Y")) - birth_j]
+
+all_games_FIDE_EC[, age_diff := age_i - age_j]
+```
+
+#Logistic Regression for age
+```{r}
+age_model_FIDE <- glm(result_num ~ rating_diff + age_diff, data = all_games_FIDE_EC, family = binomial)
+summary(age_model_FIDE)
+```
+
+```{r}
+beta_rating_all <- 0.006153
+beta_age_all <- -0.001791
+alpha_age_all <- beta_rating_all/beta_age_all # ~-3.435511
+alpha_age_all
+```
+
+
+###BUILD AN ELO SYSTEM USING THE COVARIATES AND MEASURE THE BRIER SCORE?
+#Define Covariates
+```{r}
+coefs <- coef(country_model_FIDE)
+country_i_coefs <- coefs[grep("^country_i", names(coefs))]
+country_j_coefs <- coefs[grep("^country_j", names(coefs))]
+names(country_i_coefs) <- sub("country_i", "", names(country_i_coefs))
+names(country_j_coefs) <- sub("country_j", "", names(country_j_coefs))
+```
+
+#Elo Update, I don't think I need this chunk
+```{r}
+#colnames(all_games_FIDE_EC)
+#K <- 20
+#all_games_FIDE_EC[, rating_i_new := rating_i + K * (result_num - p_elo)] #Find and run the code that makes result_num
+#all_games_FIDE_EC[, rating_j_new := rating_j + K * ((1 - result_num) - (1 - p_elo))] #Error here
+```
+
+#All FIDE games Elo loop + Age Difference
+```{r}
+K <- 20
+scale <- 400
+alpha_age_all <- -3.435511   # from regression
+n_runs <- 1
+brier_scores_FIDE_EC <- numeric(n_runs)
+init_ratings_FIDE_df <- combined_FIDE_EC[combined_FIDE_EC$Month == "FEB25",]
+init_ratings_FIDE <- setNames(init_ratings_FIDE_df$rating,as.character(init_ratings_FIDE_df$ID))
+valid_players <- names(init_ratings_FIDE) #Taking out players who don't have a FIDE rating
+all_games_FIDE_EC <- all_games_FIDE_EC[all_games_FIDE_EC$player_i %in% valid_players & all_games_FIDE_EC$player_j %in% valid_players,]
+system.time({
+  all_games_FIDE_EC$p_elo <- numeric(nrow(all_games_FIDE_EC))
+  ratings <- init_ratings_FIDE
+    for (i in 1:nrow(all_games_FIDE_EC)) {
+      w <- as.character(all_games_FIDE_EC$player_i[i])
+      b <- as.character(all_games_FIDE_EC$player_j[i])
+      RW <- ratings[[w]]
+      RB <- ratings[[b]]
+      age_diff <- as.numeric(all_games_FIDE_EC$age_diff[i])
+      adj_diff <- (RW - RB) + alpha_age_all * age_diff
+      p_w <- 1 / (1 + 10^(-adj_diff / scale))
+      all_games_FIDE_EC$p_elo[i] <- p_w
+      result <- all_games_FIDE_EC$result_num[i]
+      ratings[[w]] <- RW + K * (result - p_w)
+      ratings[[b]] <- RB + K * ((1 - result) - (1 - p_w))
+    }
+   brier_scores_FIDE_EC[1] <- brier_score(
+  all_games_FIDE_EC$p_elo,
+  all_games_FIDE_EC$result_num
+)
+})
+brier_scores_FIDE_EC
+```
+#Still need elo system for all_gammes_FIDE
+```{r}
+brier_FIDE
+```
+
+
+####Tennis Data
+```{r}
+atp_matches_2000 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2000.csv")
+atp_matches_2001 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2001.csv")
+atp_matches_2002 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2002.csv")
+atp_matches_2003 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2003.csv")
+atp_matches_2004 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2004.csv")
+atp_matches_2005 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2005.csv")
+atp_matches_2006 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2006.csv")
+atp_matches_2007 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2007.csv")
+atp_matches_2008 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2008.csv")
+atp_matches_2009 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2009.csv")
+atp_matches_2010 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2010.csv")
+atp_matches_2011 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2011.csv")
+atp_matches_2012 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2012.csv")
+atp_matches_2013 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2013.csv")
+atp_matches_2014 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2014.csv")
+atp_matches_2015 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2015.csv")
+atp_matches_2016 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2016.csv")
+atp_matches_2017 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2017.csv")
+atp_matches_2018 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2018.csv")
+atp_matches_2019 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2019.csv")
+atp_matches_2020 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2020.csv")
+atp_matches_2021 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2021.csv")
+atp_matches_2022 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2022.csv")
+atp_matches_2023 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2023.csv")
+atp_matches_2024 <- read.csv("C:/Users/Jrs81/Downloads/FIDE_Snapshots/atp_matches_2024.csv")
+combined_atp_matches <- rbind(atp_matches_2000,
+                              atp_matches_2001,
+                              atp_matches_2002,
+                              atp_matches_2003,
+                              atp_matches_2004,
+                              atp_matches_2005,
+                              atp_matches_2006,
+                              atp_matches_2007,
+                              atp_matches_2008,
+                              atp_matches_2009,
+                              atp_matches_2010,
+                              atp_matches_2011,
+                              atp_matches_2012,
+                              atp_matches_2013,
+                              atp_matches_2014,
+                              atp_matches_2015,
+                              atp_matches_2016,
+                              atp_matches_2017,
+                              atp_matches_2018,
+                              atp_matches_2019,
+                              atp_matches_2020,
+                              atp_matches_2021,
+                              atp_matches_2022,
+                              atp_matches_2023,
+                              atp_matches_2024)
+```
+
+#Create an Elo System, with everyone starting with mean rating 1500 with standard deviation of 200
+```{r}
+players_atp <- unique(c(combined_atp_matches$winner_id, combined_atp_matches$loser_id))
+#Sort Matches by Date
+combined_atp_matches <- combined_atp_matches %>% mutate(date = as.Date(as.character(tourney_date), format = "%Y%m%d"))%>% arrange(date, match_num)
+#So you don't have to keep referring back to ids
+winner_ids <- as.character(combined_atp_matches$winner_id)
+loser_ids  <- as.character(combined_atp_matches$loser_id)
+n <- nrow(combined_atp_matches)
+```
+
+#Elo Loop & Brier Score for traditional elo system on Tennis, will take ~60 minutes to run
+```{r}
+K <- 20
+n_runs <- 10
+brier_scores_atp <- numeric(n_runs)
+
+system.time({
+combined_atp_matches$p_elo <- numeric(n)
+combined_atp_matches$outcome <- rep(1, n)  # winner always = 1
+combined_atp_matches$rating_diff <- numeric(n)
+for(run in 1:n_runs){
+  ratings_atp <- setNames(
+    1500 + rnorm(length(players_atp), mean = 0, sd = 200),
+    players_atp
+  )
+  for (i in 1:n) {
+  w <- as.character(winner_ids[i])
+  l <- as.character(loser_ids[i])
+  RW <- ratings_atp[w]
+  RL <- ratings_atp[l]
+  combined_atp_matches$rating_diff[i] <- RW - RL
+  #Prediction
+  p_w <- 1 / (1 + 10^((RL - RW)/400))
+  combined_atp_matches$p_elo[i] <- p_w
+  # Outcome, update score
+  ratings_atp[w] <- RW + K * (1 - p_w)
+  ratings_atp[l] <- RL + K * (0 - (1 - p_w))
+  # Compute Brier score for this run
+  brier_scores_atp[run] <- brier_score(combined_atp_matches$p_elo, combined_atp_matches$outcome)
+  }
+  }
+}
+)
+```
+ 
+```{r}
+mean(brier_scores_atp)
+sd(brier_scores_atp)
+```
+```{r}
+summary(combined_atp_matches$p_elo)
+summary(combined_atp_matches$outcome)
+```
+
+##Check regression for Age and Country in Tennis Data
+#Country/IOC. winner_ioc and loser_ioc
+```{r}
+#Create two perspectives for the logistic regression to work correctly.
+combined_atp_matches_win <- combined_atp_matches
+combined_atp_matches_win$outcome <- 1
+combined_atp_matches_lose <- combined_atp_matches
+#combined_atp_matches_lose$rating_diff <- -combined_atp_matches_lose$rating_diff
+combined_atp_matches_lose$outcome <- 0
+setDT(combined_atp_matches_win)
+setDT(combined_atp_matches_lose)
+combined_atp_matches_win[,age_diff := winner_age - loser_age]
+combined_atp_matches_lose[,age_diff := loser_age - winner_age]
+full_data_atp <- rbind(combined_atp_matches_win, combined_atp_matches_lose)
+full_data_atp$country_i <- full_data_atp$winner_ioc
+full_data_atp$country_j <- full_data_atp$loser_ioc
+```
+#Standard Elo Regression (Looks good)
+```{r}
+standard_elo_model <- glm(outcome ~ rating_diff,data = full_data_atp,family = binomial)
+summary(standard_elo_model)
+```
+#Country Elo Regression, since I duplicated data, it sees everything happen twice in the opposite direction so everything cancels.
+```{r}
+country_model_atp <- glm(outcome ~ rating_diff + country_i,data = full_data_atp,family = binomial)
+summary(country_model_atp)
+```
+
+#Calculate Age, calculate age difference, run logistic regression
+```{r}
+age_regression_atp <- glm(outcome ~ rating_diff + age_diff, data = full_data_atp, family = binomial)
+summary(age_regression_atp)
+```
+```{r}
+beta_rating_atp <-  -2.992e-18
+beta_age_atp    <- -0.007471
+scale_atp       <- log(10) / beta_rating_atp   
+alpha_age_atp     <- beta_age_atp / beta_rating_atp 
+scale_atp
+alpha_age_atp
+```
+
+
+#Elo Loop & Brier Score for elo system with covariates on Tennis
+PROMPT that could be used to start this loop: Write a complete and well-structured R script that implements an Elo rating system for ATP tennis match data using a sequential loop.
+```{r}
+K <- 20
+scale_atp <- -7.695806e+17
+alpha_age_atp <- 2.496992e+15   
+n_runs <- 10
+brier_scores_atp_EC <- numeric(n_runs)
+ratings_history <- vector("list", n_runs)
+names(ratings_history) <- paste0("run_", 1:n_runs)
+combined_atp_matches$outcome <- 1
+
+n <- nrow(combined_atp_matches)
+system.time({
+  combined_atp_matches$p_elo <- rep(NA_real_, nrow(combined_atp_matches))
+  for(run in 1:n_runs){
+    for(run in 1:n_runs){
+  combined_atp_matches$p_elo <- rep(NA_real_, n)
+    ratings_atp <- setNames(
+      rnorm(length(players_atp), mean = 1500, sd = 200),
+      players_atp
+    )
+    for (i in 1:n) {
+      w <- as.character(winner_ids[i])
+      l <- as.character(loser_ids[i])
+      RW <- ratings_atp[w]
+      RL <- ratings_atp[l]
+      
+      if (is.na(combined_atp_matches$winner_age[i]) || is.na(combined_atp_matches$loser_age[i]) || is.na(RW) || is.na(RL)) {
+  combined_atp_matches$p_elo[i] <- NA
+  next
+      }
+      
+      age_diff <- combined_atp_matches$winner_age[i] - combined_atp_matches$loser_age[i]
+      adj_diff <- (RW - RL) + alpha_age_atp * age_diff
+      p_w <- 1 / (1 + 10^(-adj_diff / scale_atp))
+      combined_atp_matches$p_elo[i] <- p_w
+      ratings_atp[w] <- RW + K * (1 - p_w)
+      ratings_atp[l] <- RL + K * (0 - p_w)
+    }
+    valid <- !is.na(combined_atp_matches$p_elo)
+brier_scores_atp_EC[run] <- mean((combined_atp_matches$p_elo[valid] - 1)^2)
+    ratings_history[[run]] <- ratings_atp
+  }
+}
+  }) 
+mean(brier_scores_atp_EC)
+```
+```{r}
+mean(brier_scores_atp)
+mean(brier_scores_atp_EC)
+```
+
+#Age is not adaptive here, so a traditional elo system should still be better.
+Grid search is a traditional, brute-force technique used in machine learning for hyperparameter tuning—the process of finding the optimal settings (hyperparameters) for a model to achieve the best performance. It works by systematically training and evaluating a model on every possible combination of a predefined, user-specified set of hyperparameter values, constructing a "grid" of combinations to explore
+
+
+##Predict elo with predictors, age + country, etc...
+
+#To make the continents column in combined_atp_matches
+```{r}
+combined_atp_matches <- combined_atp_matches %>%
+  mutate(
+    winner_continent = countrycode(winner_ioc, origin = "ioc", destination = "continent"),
+    loser_continent  = countrycode(loser_ioc,  origin = "ioc", destination = "continent")
+  )
+sum(is.na(combined_atp_matches$winner_continent)) #64 NA
+sum(is.na(combined_atp_matches$loser_continent)) # 137 NA
+```
+
+
+```{r}
+# Get all unique players (should match players_atp)
+all_players <- players_atp
+# Initialize matrix: rows = players, cols = runs
+ratings_matrix <- matrix(NA_real_, nrow = length(all_players), ncol = n_runs,dimnames = list(all_players, paste0("run_", 1:n_runs)))
+# Fill matrix
+for (run in 1:n_runs) {
+  ratings_matrix[names(ratings_history[[run]]), run] <- ratings_history[[run]]
+}
+# Average rating per player
+avg_ratings <- rowMeans(ratings_matrix, na.rm = TRUE)
+# Optional: turn into a data frame
+avg_ratings_df <- data.frame(
+  player = names(avg_ratings),
+  avg_rating = avg_ratings
+)
+# Optional: inspect
+head(avg_ratings_df[order(-avg_ratings_df$avg_rating), ])
+```
+
+```{r}
+# Build player-level dataset (wins, matches, win %, avg age)
+player_summary <- bind_rows(
+  combined_atp_matches %>%
+    transmute(
+      player = as.character(winner_id),
+      win = 1,
+      age = winner_age,
+      surface = tolower(surface),
+      w_ace = w_ace,
+      w_svpt = w_svpt,
+      w_df = w_df,
+      w_1stWon = w_1stWon,
+      w_1stIn = w_1stIn,
+      w_bpSaved = w_bpSaved,
+      w_bpFaced = w_bpFaced,
+      minutes = minutes,
+      continent = winner_continent,
+      ioc = winner_ioc
+    ),
+  combined_atp_matches %>%
+    transmute(
+      player = as.character(loser_id),
+      win = 0,
+      age = loser_age,
+      surface = tolower(surface),
+       w_ace = w_ace,
+      w_svpt = w_svpt,
+      w_df = w_df,
+      w_1stWon = w_1stWon,
+      w_1stIn = w_1stIn,
+      w_bpSaved = w_bpSaved,
+      w_bpFaced = w_bpFaced,
+      minutes = minutes,
+      continent = loser_continent,
+      ioc = loser_ioc
+    )
+) %>%
+  group_by(player) %>%
+  summarise(
+    matches = n(),
+    wins = sum(win, na.rm = TRUE),
+    win_pct = mean(win, na.rm = TRUE),
+    avg_age = mean(age, na.rm = TRUE),
+    avg_aces = mean(w_ace / w_svpt, na.rm = TRUE),
+    avg_df = mean(w_df / w_svpt, na.rm = TRUE),
+    avg_1st_win = mean(w_1stWon / w_1stIn, na.rm = TRUE),
+    bp_save_rate = sum(w_bpSaved, na.rm = TRUE) / sum(w_bpFaced, na.rm = TRUE),
+    avg_minutes = mean(minutes, na.rm = TRUE),
+    clay_win_pct  = mean(win[surface == "clay"], na.rm = TRUE),
+    hard_win_pct  = mean(win[surface == "hard"], na.rm = TRUE),
+    grass_win_pct = mean(win[surface == "grass"], na.rm = TRUE),
+    carpet_win_pct = mean(win[surface == "carpet"], na.rm = TRUE),
+    continent = first(na.omit(continent)),
+    ioc = first(na.omit(ioc)),
+    .groups = "drop"
+  ) %>%
+  filter(matches >= 10)
+
+# Join with ratings
+df <- avg_ratings_df %>%
+  mutate(player = as.character(player)) %>%
+  inner_join(player_summary, by = "player")
+```
+# # of games per surface + 53 blanks
+```{r}
+sum(combined_atp_matches$surface == "Hard") # 40,871
+sum(combined_atp_matches$surface == "Clay") # 24,244
+sum(combined_atp_matches$surface == "Grass") # 7,699
+sum(combined_atp_matches$surface == "Carpet") # 2,039
+sum(combined_atp_matches$surface == "") # 53
+nrow(combined_atp_matches) #74,906
+unique(combined_atp_matches$surface)
+```
+
+
+#Pull more columns from combined_atp_matches to see how we can get R^2 as close to 1 as possible.
+```{r}
+colnames(df)
+```
+
+#1 Predictor
+Wins Multiple R^2 = 0.5987
+```{r}
+wins_model <- lm(avg_rating~ wins, data = df)
+summary(wins_model)
+```
+win_pct Multiple R^2 = 0.2198
+```{r}
+winpct_model <- lm(avg_rating~ win_pct, data = df)
+summary(winpct_model)
+```
+matches Multiple R^2 = 0.3831
+```{r}
+matches_model <- lm(avg_rating~ matches, data = df)
+summary(matches_model)
+```
+avg_age Multiple R^2 = 0.0006598
+```{r}
+avg_age_model <- lm(avg_rating~avg_age, data = df)
+summary(avg_age_model)
+```
+avg_aces Multiple r^2 = 0.002765
+```{r}
+avgaces_model <- lm(avg_rating~avg_aces, df)
+summary(avgaces_model)
+```
+avg_df, Multiple r^2 = 0.0184
+```{r}
+avg_df_model <- lm(avg_rating~avg_df, df)
+summary(avg_df_model)
+```
+avg_1st_win, Multiple R^2 = 0.008843
+```{r}
+avg_1st_win_model <- lm(avg_rating~avg_1st_win, df)
+summary(avg_1st_win_model)
+```
+bp_save_rate, Multiple R^2 = 0.000805
+```{r}
+bp_save_rate_model <- lm(avg_rating~bp_save_rate, df)
+summary(bp_save_rate_model)
+```
+avg_minutes, Multiple R^2 = 0.01829
+```{r}
+avg_minutes_model <- lm(avg_rating~avg_minutes, df)
+summary(avg_minutes_model)
+```
+clay_win_pct, Multiple R^2 = 0.1244
+```{r}
+clay_win_pct_model <- lm(avg_rating~clay_win_pct, df)
+summary(clay_win_pct_model)
+```
+hard_win_pct, Multiple R^2 = 0.1362
+```{r}
+hard_win_pct_model <- lm(avg_rating~hard_win_pct, df)
+summary(hard_win_pct_model)
+```
+grass_win_pct, Multiple R^2 = 0.2798
+```{r}
+grass_win_pct_model <- lm(avg_rating~grass_win_pct, df)
+summary(grass_win_pct_model)
+```
+carpet_win_pct, Multiple R^2 = 0.07572
+```{r}
+carpet_win_pct_model <- lm(avg_rating~carpet_win_pct, df)
+summary(carpet_win_pct_model)
+```
+ioc, Mulitple R^2 = 0.06805
+```{r}
+ioc_model <- lm(avg_rating~ioc, df)
+summary(ioc_model)
+```
+continent, Multiple R^2 = 0.007802
+```{r}
+continent_model <- lm(avg_rating~continent, df)
+summary(continent_model)
+```
+
+
+#2 Predictors
+wins + win_pct Multiple R^2 = 0.5137
+```{r}
+wins_winpct_model <- lm(avg_rating~wins+win_pct, data = df)
+summary(wins_winpct_model)
+```
+wins + matches Multiple R^2 = 0.4225
+```{r}
+wins_matches_model <- lm(avg_rating~ wins + matches, data = df)
+summary(wins_matches_model)
+```
+wins + avg_age Multiple R^2 = 0.4011
+```{r}
+wins_avgage_model <- lm(avg_rating~wins+avg_age, data = df)
+summary(wins_avgage_model)
+```
+win_pct + matches, Multiple R^2 = 0.4846
+```{r}
+winpct_matches_model <- lm(avg_rating~ win_pct + matches, data = df)
+summary(winpct_matches_model)
+```
+win_pct + avg_age, Multiple R^2 = 0.3972
+```{r}
+winpct_avgage_model <- lm(avg_rating~win_pct+avg_age, data = df)
+summary(winpct_avgage_model)
+```
+avg_age + matches, Multiple R^2 = 0.342
+```{r}
+avgage_matches_model <- lm(avg_rating~avg_age+matches, data = df)
+summary(avgage_matches_model)
+```
+
+#3 predictors
+wins + win_pct + matches Multiple R^2 = 0.5331
+```{r}
+wins_winpct_matches_model <- lm(avg_rating~ wins + win_pct + matches, data = df)
+summary(wins_winpct_matches_model)
+```
+wins + win_pct _ avg_age Multiple R^2 = 0.5181
+```{r}
+wins_winpct_avgage_model <- lm(avg_rating ~ wins+win_pct+avg_age, data = df)
+summary(wins_winpct_avgage_model)
+```
+wins + matches + avg_age Multiple R^2 = 0.4254
+```{r}
+wins_matches_avgage_model <- lm(avg_rating~ wins+matches+avg_age, data = df)
+summary(wins_matches_avgage_model)
+```
+win_pct + matches + avg_age Multiple R^2 = 0.4902
+```{r}
+winpct_matches_avgage_model <- lm(avg_rating~win_pct+matches+avg_age, data = df)
+summary(winpct_matches_avgage_model)
+```
+
+
+
+#4 Predictors
+
+wins + win_pct + matches + avg_age Multiple R^2 = 0.5342
+```{r}
+wins_winpct_matches_avgage_model <- lm(avg_rating ~ wins + win_pct + matches + avg_age, data = df)
+summary(wins_winpct_matches_avgage_model)
+```
+
+
+
+All predictors, Multiple R^2 = 0.7881
+```{r}
+big_model <- lm(avg_rating~wins+win_pct + avg_age+avg_aces+avg_df+avg_1st_win+bp_save_rate+avg_minutes+clay_win_pct+hard_win_pct+grass_win_pct+carpet_win_pct+ioc+continent, df)
+summary(big_model)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Building the Bradley-Terry System, must fix-up data for use of BradleyTerry2
+# IMPORTANT Can not use a global BT system, as there are clusters of players that do not play against one another. 
+```{r}
+g <- graph_from_data_frame(all_games_FIDE[, c("White", "Black")])
+is_connected(g)
+```
+# SOLUTION Keep largest connected component
+```{r}
+comp <- components(g)
+largest_comp <- which.max(comp$csize)
+comp$csize # 5244 is largest component of connections
+```
+```{r}
+keep_players <- names(comp$membership[comp$membership == largest_comp])
+#length(keep_players) # 5,244 players are in the longest connection of players, keep these players and use them.
+all_games_FIDE_connected <- all_games_FIDE[all_games_FIDE$White %in% keep_players & all_games_FIDE$Black %in% keep_players, ]
+#nrow(all_games_FIDE_connected) #  34,152 games are still usable in the BT model
+```
+# Number of Players and Games that are connected in BT model
+```{r}
+cat("Players:", length(keep_players), "\n")
+cat("Games:", nrow(all_games_FIDE_connected), "\n")
+```
+```{r}
+all_games_FIDE_connected <- subset(all_games_FIDE_connected,Result %in% c("1-0", "0-1")) #This removes the draws, so they aren't use in BTm
+# Create outcomes
+all_games_FIDE_connected$win1 <- ifelse(all_games_FIDE_connected$Result == "1-0", 1, 0)
+all_games_FIDE_connected$win2 <- ifelse(all_games_FIDE_connected$Result == "0-1", 1, 0)
+# Players
+all_games_FIDE_connected$player1 <- factor(all_games_FIDE_connected$White)
+all_games_FIDE_connected$player2 <- factor(all_games_FIDE_connected$Black)
+```
+#Must create levels for if players haven't played W or B before
+```{r}
+# Get all unique players from both columns
+all_players <- unique(c(all_games_FIDE_connected$White, all_games_FIDE_connected$Black))
+# Apply same levels to both
+all_games_FIDE_connected$player1 <- factor(all_games_FIDE_connected$White, levels = all_players)
+all_games_FIDE_connected$player2 <- factor(all_games_FIDE_connected$Black, levels = all_players)
+model1 <- BTm(cbind(win1, win2),player1,player2,data = all_games_FIDE_connected)
+system.time(model_test <- BTm(cbind(win1, win2),player1,player2,data = small_data))
+set.seed(1)
+sample_players <- sample(unique(all_games_FIDE_connected$player1), 200)
+small_data <- subset(all_games_FIDE_connected,player1 %in% sample_players & player2 %in% sample_players)
+length(unique(c(small_data$player1, small_data$player2)))
+summary(model_test)
+```
+
+
+
+
+
+
+
+
+
