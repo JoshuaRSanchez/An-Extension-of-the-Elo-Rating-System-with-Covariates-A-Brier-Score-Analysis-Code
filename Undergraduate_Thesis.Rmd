@@ -1735,38 +1735,7 @@ summary(big_model)
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#Attempted to create Bradley-Terry model, figured it would still be useful to include for future reference.
 #Building the Bradley-Terry System, must fix-up data for use of BradleyTerry2
 # IMPORTANT Can not use a global BT system, as there are clusters of players that do not play against one another. 
 ```{r}
